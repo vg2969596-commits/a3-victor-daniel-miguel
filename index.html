@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro de Pets - Sistema Distribuído (A3)</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        color: #333;
+        padding: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        font-size: 1.8rem;
+        text-align: center;
+        margin-bottom: 20px;
+        color: #1a365d;
+      }
+      form {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 30px;
+        background: #eef2f7;
+        padding: 15px;
+        border-radius: 5px;
+      }
+      input {
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 100%;
+      }
+      button {
+        padding: 12px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+      }
+      button:hover {
+        background-color: #218838;
+      }
+      button.btn-excluir {
+        background-color: #dc3545;
+        padding: 6px 10px;
+        font-size: 14px;
+      }
+      button.btn-excluir:hover {
+        background-color: #c82333;
+      }
+      button.btn-editar {
+        background-color: #ffc107;
+        color: black;
+        margin-right: 5px;
+        padding: 6px 10px;
+        font-size: 14px;
+      }
+      button.btn-editar:hover {
+        background-color: #e0a905;
+      }
+
+      /* Tabela Responsiva para funcionar perfeitamente em Celular e PC */
+      .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        margin-top: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 500px;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: left;
+      }
+      th {
+        background-color: #007bff;
+        color: white;
+      }
+      tr:nth-child(even) {
+        background-color: #f8f9fa;
+      }
+
+      @media (max-width: 600px) {
+        body {
+          padding: 10px;
+        }
+        h1 {
+          font-size: 1.4rem;
+        }
+        input,
+        button {
+          font-size: 14px;
+          padding: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🐾 Gerenciador de Pets - Grupo A3</h1>
+      <hr style="margin-bottom: 20px; border: 0; border-top: 1px solid #eee" />
+
+      <h2 id="titulo-formulario" style="font-size: 1.3rem; margin-bottom: 10px">
+        Cadastrar Novo Pet
+      </h2>
+      <form id="pet-form">
+        <input type="hidden" id="pet-id" />
+        <input type="text" id="nome" placeholder="Nome do Pet" required />
+        <input
+          type="text"
+          id="especie"
+          placeholder="Espécie (Ex: Cão, Gato)"
+          required
+        />
+        <input type="text" id="raca" placeholder="Raça" required />
+        <input
+          type="number"
+          id="idade"
+          placeholder="Idade (em anos)"
+          required
+        />
+        <input
+          type="text"
+          id="nome_tutor"
+          placeholder="Nome do Tutor"
+          required
+        />
+        <button type="submit" id="btn-salvar">Salvar Pet</button>
+        <button
+          type="button"
+          id="btn-cancelar"
+          style="display: none; background-color: #6c757d"
+        >
+          Cancelar
+        </button>
+      </form>
+
+      <h2 style="font-size: 1.3rem; margin-bottom: 10px">Pets Cadastrados</h2>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Espécie</th>
+              <th>Raça</th>
+              <th>Idade</th>
+              <th>Tutor</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-pets-corpo"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      // Banco de Dados embutido simulando uma API REST (Sem necessidade de Terminal)
+      document.addEventListener("DOMContentLoaded", carregarPets);
+
+      function obterPetsDoBanco() {
+        const pets = localStorage.getItem("pets_database");
+        return pets ? JSON.parse(pets) : [];
+      }
+
+      function salvarPetsNoBanco(pets) {
+        localStorage.setItem("pets_database", JSON.stringify(pets));
+      }
+
+      function carregarPets() {
+        const pets = obterPetsDoBanco();
+        const corpoTabela = document.getElementById("tabela-pets-corpo");
+        corpoTabela.innerHTML = "";
+
+        if (pets.length === 0) {
+          corpoTabela.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#777;">Nenhum pet cadastrado ainda.</td></tr>`;
+          return;
+        }
+
+        pets.forEach((pet) => {
+          const linha = document.createElement("tr");
+          linha.innerHTML = `
+                <td>${pet.id}</td>
+                <td><strong>${pet.nome}</strong></td>
+                <td>${pet.especie}</td>
+                <td>${pet.raca}</td>
+                <td>${pet.idade} anos</td>
+                <td>${pet.nome_tutor}</td>
+                <td>
+                    <button class="btn-editar" onclick='prepararEdicao(${JSON.stringify(pet)})'>Editar</button>
+                    <button class="btn-excluir" onclick="deletarPet(${pet.id})">Excluir</button>
+                </td>
+            `;
+          corpoTabela.appendChild(linha);
+        });
+      }
+
+      document
+        .getElementById("pet-form")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const id = document.getElementById("pet-id").value;
+          const pets = obterPetsDoBanco();
+
+          const petDado = {
+            id: id
+              ? parseInt(id)
+              : pets.length > 0
+                ? pets[pets.length - 1].id + 1
+                : 1,
+            nome: document.getElementById("nome").value,
+            especie: document.getElementById("especie").value,
+            raca: document.getElementById("raca").value,
+            idade: parseInt(document.getElementById("idade").value),
+            nome_tutor: document.getElementById("nome_tutor").value,
+          };
+
+          if (id) {
+            // Operação UPDATE
+            const index = pets.findIndex((p) => p.id === parseInt(id));
+            if (index !== -1) pets[index] = petDado;
+          } else {
+            // Operação CREATE
+            pets.push(petDado);
+          }
+
+          salvarPetsNoBanco(pets);
+          resetarFormulario();
+          carregarPets();
+        });
+
+      function prepararEdicao(pet) {
+        document.getElementById("titulo-formulario").innerText =
+          "Editar Dados do Pet";
+        document.getElementById("pet-id").value = pet.id;
+        document.getElementById("nome").value = pet.nome;
+        document.getElementById("especie").value = pet.especie;
+        document.getElementById("raca").value = pet.raca;
+        document.getElementById("idade").value = pet.idade;
+        document.getElementById("nome_tutor").value = pet.nome_tutor;
+        document.getElementById("btn-cancelar").style.display = "inline-block";
+      }
+
+      function deletarPet(id) {
+        if (confirm("Deseja remover este pet permanentemente?")) {
+          let pets = obterPetsDoBanco();
+          pets = pets.filter((p) => p.id !== id);
+          salvarPetsNoBanco(pets);
+          carregarPets();
+        }
+      }
+
+      document
+        .getElementById("btn-cancelar")
+        .addEventListener("click", resetarFormulario);
+
+      function resetarFormulario() {
+        document.getElementById("titulo-formulario").innerText =
+          "Cadastrar Novo Pet";
+        document.getElementById("pet-id").value = "";
+        document.getElementById("pet-form").reset();
+        document.getElementById("btn-cancelar").style.display = "none";
+      }
+    </script>
+  </body>
+</html>
